@@ -71,7 +71,7 @@ func main() {
 				dtOpen, _ := time.Parse(time.RFC1123, plurk.Posted)
 				dfOpen := time.Now().UnixNano() - dtOpen.UnixNano()
 				if isOpen {
-					fmt.Println(dtOpen.Format("2006-01-02 15:04:05.000 -0700"))
+					fmt.Println(dtOpen.Format("2006-01-02 15:04:05 -0700"))
 					// 取得回應
 					opt = map[string]string{}
 					opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
