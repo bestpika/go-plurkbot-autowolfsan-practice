@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/clsung/plurgo/plurkgo"
 	"github.com/garyburd/go-oauth/oauth"
@@ -70,7 +71,7 @@ func main() {
 				dtOpen, _ := time.Parse(time.RFC1123, plurk.Posted)
 				dfOpen := time.Now().UnixNano() - dtOpen.UnixNano()
 				if isOpen {
-					fmt.Println(dtOpen.Format("2006-01-02 15:04:05:000 -0700"))
+					fmt.Println(dtOpen.Format("2006-01-02 15:04:05.000 -0700"))
 					// 取得回應
 					opt = map[string]string{}
 					opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
@@ -79,14 +80,22 @@ func main() {
 					responses := plurksObj{}
 					json.Unmarshal(ans, &responses)
 					// printObjIndent(responses)
-					for _, response := range responses.Responses { // 每個回應
-						isDone, _ = regexp.MatchString("(陣營|妖狐)存活", response.ContentRaw)
+					for i, response := range responses.Responses { // 每個回應
+						if !isDone {
+							isDone, _ = regexp.MatchString("(陣營|妖狐)存活", response.ContentRaw)
+						}
+						t, _ := time.Parse(time.RFC1123, response.Posted)
 						response.ContentRaw = strings.Trim(response.ContentRaw, " ")
 						response.ContentRaw = strings.Replace(response.ContentRaw, "\n", ", ", -1)
 						response.ContentRaw = strings.Trim(response.ContentRaw, " ")
-						fmt.Printf("{ %s }\n", response.ContentRaw)
-						if isDone {
-							break
+						var s string
+						if utf8.RuneCountInString(response.ContentRaw) > 30 {
+							s = fmt.Sprintf("%s...", string([]rune(response.ContentRaw)[:30]))
+						} else {
+							s = response.ContentRaw
+						}
+						if i >= responses.ResponseSeen {
+							fmt.Printf("%s, { %s }\n", t.Format("2006-01-02 15:04:05 -0700"), s)
 						}
 					}
 					if !isDone && dfOpen >= 3600000000000 {
