@@ -85,8 +85,10 @@ func main() {
 							isDone, _ = regexp.MatchString("(陣營|妖狐)存活", response.ContentRaw)
 						}
 						t, _ := time.Parse(time.RFC1123, response.Posted)
-						response.ContentRaw = strings.Trim(response.ContentRaw, " ")
-						response.ContentRaw = strings.Replace(response.ContentRaw, "\n", ", ", -1)
+						r := strings.NewReplacer("\n", ", ", "**", "", "__", "")
+						re := regexp.MustCompile("\\*(.+)\\*")
+						response.ContentRaw = r.Replace(response.ContentRaw)
+						response.ContentRaw = re.ReplaceAllString(response.ContentRaw, "${1}")
 						response.ContentRaw = strings.Trim(response.ContentRaw, " ")
 						var s string
 						if utf8.RuneCountInString(response.ContentRaw) > 30 {
