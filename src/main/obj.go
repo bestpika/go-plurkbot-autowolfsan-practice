@@ -28,6 +28,6 @@ type plurkObj struct {
 type plurksObj struct {
 	Plurks        []plurkObj `json:"plurks"`
 	ResponseCount int        `json:"response_count"`
-	ResponseSeen  int        `json:"responses_seen"`
+	ResponsesSeen int        `json:"responses_seen"`
 	Responses     []plurkObj `json:"responses"`
 }

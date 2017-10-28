@@ -94,7 +94,7 @@ func main() {
 						} else {
 							s = response.ContentRaw
 						}
-						if i >= responses.ResponseSeen {
+						if i >= responses.ResponsesSeen {
 							fmt.Printf("%s, { %s }\n", t.Format("2006-01-02 15:04:05 -0700"), s)
 						}
 					}
