@@ -102,8 +102,8 @@ func main() {
 						isOpen = false
 						opt = map[string]string{}
 						opt["qualifier"] = ":"
-						opt["content"] = fmt.Sprintf("廢村\n%s", time.Now().Format("2006/01/02 15:04:05.000"))
 						opt["lang"] = "ja"
+						opt["content"] = fmt.Sprintf("廢村\n%s", time.Now().Format("2006/01/02 15:04:05.000"))
 						ans, _ = callAPI(tok, "/APP/Timeline/plurkAdd", opt)
 						plurk := plurkObj{}
 						json.Unmarshal(ans, &plurk)
@@ -123,8 +123,9 @@ func main() {
 				fmt.Println("開村！")
 				opt = map[string]string{}
 				opt["qualifier"] = ":"
-				opt["content"] = fmt.Sprintf("%s\n開村", time.Now().Format("2006/01/02 15:04:05.000"))
 				opt["lang"] = "ja"
+				opt["content"] = fmt.Sprintf("%s\n開村", time.Now().Format("2006/01/02 15:04:05.000"))
+				opt["porn"] = "1"
 				ans, e := callAPI(tok, "/APP/Timeline/plurkAdd", opt)
 				plurk := plurkObj{}
 				if e != nil {
@@ -136,7 +137,7 @@ func main() {
 					opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
 					opt["qualifier"] = "will"
 					rand.Seed(time.Now().UnixNano())
-					for i := 0; i < 29; i++ {
+					for i := 0; i < 14; i++ {
 						opt["content"] = fmt.Sprintf("高橋李依進村\n[%d] %s", i+1, time.Now().Format("2006/01/02 15:04:05.000"))
 						_, e := callAPI(tok, "/APP/Responses/responseAdd", opt)
 						if e != nil {
