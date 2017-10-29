@@ -153,9 +153,7 @@ func main() {
 				} else if len(plurks.Plurks) > 0 {
 					for _, plurk := range plurks.Plurks {
 						// 不刪除記錄噗
-						if len(plurks.Plurks) == 1 && plurk.PlurkID == l {
-							break
-						} else if plurk.PlurkID != l {
+						if plurk.PlurkID != l {
 							fmt.Printf("刪除 [%d]\n", plurk.PlurkID)
 							opt = map[string]string{}
 							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
