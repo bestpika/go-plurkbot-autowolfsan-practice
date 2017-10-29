@@ -49,16 +49,16 @@ func main() {
 		plurker := plurkerObj{} // 使用者
 		json.Unmarshal(ans, &plurker)
 		printObjIndent(plurker)
+		// 迴圈開始
 		for true {
 			// 取得最近的噗
 			opt = map[string]string{}
-			opt["offset"] = time.Now().Format("2006-1-2T15:04:05") // 比現在早的
+			opt["offset"] = time.Now().Format("2006-1-2T15:04:05") // 現在時間
 			opt["limit"] = "10"                                    // 取 10 個
 			opt["minimal_user"] = "true"
 			ans, _ = callAPI(tok, "/APP/Timeline/getPlurks", opt)
 			plurks := plurksObj{} // 抓回來的噗
 			json.Unmarshal(ans, &plurks)
-			// printObjIndent(plurks)
 			isOpen := false // 是否開村
 			isDone := false // 是否結束
 			doOpen := false // 要不要開
@@ -66,9 +66,11 @@ func main() {
 			for _, plurk := range plurks.Plurks {
 				isOpen = strings.Contains(plurk.ContentRaw, "開村") // 有開村字串
 				dtOpen, _ := time.Parse(time.RFC1123, plurk.Posted)
-				dfOpen := time.Now().UnixNano() - dtOpen.UnixNano()
+				dfOpen := time.Now().UnixNano() - dtOpen.UnixNano() // 最後一次開村的時間差
 				if isOpen {
-					fmt.Println(dtOpen.Format("2006-01-02 15:04:05 -0700"))
+					fmt.Printf("%s...\n%s\n",
+						time.Now().Format("2006-01-02 15:04:05.000"),
+						dtOpen.Local().Format("2006-01-02 15:04:05"))
 					// 取得回應
 					opt = map[string]string{}
 					opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
@@ -76,7 +78,6 @@ func main() {
 					ans, _ = callAPI(tok, "/APP/Responses/get", opt)
 					responses := plurksObj{}
 					json.Unmarshal(ans, &responses)
-					// printObjIndent(responses)
 					for i, response := range responses.Responses { // 每個回應
 						if !isDone {
 							isDone, _ = regexp.MatchString("(陣營|妖狐)存活", response.ContentRaw)
@@ -94,7 +95,7 @@ func main() {
 							s = response.ContentRaw
 						}
 						if i >= responses.ResponsesSeen {
-							fmt.Printf("%s, { %s }\n", t.Format("2006-01-02 15:04:05 -0700"), s)
+							fmt.Printf("%s, { %s }\n", t.Local().Format("2006-01-02 15:04:05"), s)
 						}
 						if isDone && plurk.NoComments == 0 {
 							fmt.Println("結束...")
@@ -104,10 +105,11 @@ func main() {
 								opt = map[string]string{}
 								opt["plurk_id"] = strconv.Itoa(l)
 								opt["qualifier"] = ":"
-								opt["content"] = fmt.Sprintf("%d, %s, %s",
+								opt["content"] = fmt.Sprintf("PlurkID: %d\n開村: %s\n結束: %s\n進行 %d 秒",
 									plurk.PlurkID,
-									dtOpen.Format("2006-01-02 15:04:05 -0700"),
-									dtResp.Format("2006-01-02 15:04:05 -0700"))
+									dtOpen.Local().Format("2006-01-02 15:04:05"),
+									dtResp.Local().Format("2006-01-02 15:04:05"),
+									(dtResp.UnixNano()-dtOpen.UnixNano())/1000000000)
 								callAPI(tok, "/APP/Responses/responseAdd", opt)
 							}
 							// 關閉回應
@@ -122,7 +124,7 @@ func main() {
 						opt = map[string]string{}
 						opt["qualifier"] = ":"
 						opt["lang"] = "ja"
-						opt["content"] = fmt.Sprintf("廢村\n%s", time.Now().Format("2006/01/02 15:04:05.000"))
+						opt["content"] = fmt.Sprintf("廢村\n%s", time.Now().Format("2006-01-02 15:04:05.000"))
 						ans, _ = callAPI(tok, "/APP/Timeline/plurkAdd", opt)
 						plurk := plurkObj{}
 						json.Unmarshal(ans, &plurk)
@@ -154,7 +156,7 @@ func main() {
 					for _, plurk := range plurks.Plurks {
 						// 不刪除記錄噗
 						if plurk.PlurkID != l {
-							fmt.Printf("刪除 [%d]\n", plurk.PlurkID)
+							fmt.Printf("刪除: %d\n", plurk.PlurkID)
 							opt = map[string]string{}
 							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
 							callAPI(tok, "/APP/Timeline/plurkDelete", opt)
@@ -173,7 +175,7 @@ func main() {
 				opt = map[string]string{}
 				opt["qualifier"] = ":"
 				opt["lang"] = "ja"
-				opt["content"] = fmt.Sprintf("%s\n開村", time.Now().Format("2006/01/02 15:04:05.000"))
+				opt["content"] = fmt.Sprintf("%s\n開村", time.Now().Format("2006-01-02 15:04:05.000"))
 				opt["porn"] = "1"
 				ans, e := callAPI(tok, "/APP/Timeline/plurkAdd", opt)
 				plurk := plurkObj{}
@@ -187,7 +189,7 @@ func main() {
 					opt["qualifier"] = "will"
 					rand.Seed(time.Now().UnixNano())
 					for i := 0; i < 14; i++ {
-						opt["content"] = fmt.Sprintf("高橋李依進村\n[%d] %s", i+1, time.Now().Format("2006/01/02 15:04:05.000"))
+						opt["content"] = fmt.Sprintf("高橋李依進村\n%d, %s", i+1, time.Now().Format("2006-01-02 15:04:05.000"))
 						_, e := callAPI(tok, "/APP/Responses/responseAdd", opt)
 						if e != nil {
 							i--
@@ -199,7 +201,7 @@ func main() {
 						tMin := 2000
 						tMax := 4000
 						t := time.Duration(rand.Intn(tMax-tMin) + tMin)
-						fmt.Printf("[%d] %d\n", i+1, t)
+						fmt.Printf("%d, %d\n", i+1, t)
 						time.Sleep(t * time.Millisecond)
 					}
 					// 開始
@@ -214,9 +216,8 @@ func main() {
 					}
 				}
 			} else {
-				fmt.Print("等待...")
+				fmt.Print("等待...\n\n")
 			}
-			fmt.Print("\n\n")
 			time.Sleep(5 * time.Second)
 		}
 	}
@@ -261,7 +262,7 @@ func callAPI(tok *oauth.Credentials, api string, opt map[string]string) ([]byte,
 func printJSONIndent(data []byte, prefix, indent string) {
 	var jsi bytes.Buffer
 	json.Indent(&jsi, []byte(data), prefix, indent)
-	fmt.Printf("%s\n\n", jsi.Bytes())
+	fmt.Printf("\n%s\n\n", jsi.Bytes())
 }
 
 func printObjIndent(data interface{}) {
