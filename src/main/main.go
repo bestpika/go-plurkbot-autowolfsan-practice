@@ -20,6 +20,7 @@ import (
 
 var (
 	c    string
+	d    bool
 	h    bool
 	opt  map[string]string
 	errc int
@@ -27,17 +28,11 @@ var (
 
 func init() {
 	flag.BoolVar(&h, "h", false, "說明")
+	flag.BoolVar(&d, "d", false, "刪除所有噗")
 	flag.StringVar(&c, "c", "config.json", "載入設定檔")
 	flag.Usage = usage
 }
 
-/* 流程
-1. 取最近 10 個噗
-2. 依序取得回應
-	2.1 如果沒有「開村」字串，開村
-	2.2 有「開村」字串但已經結算，開村
-	2.3 有「開村」字串沒有結算但超過 1 小時，開村
-*/
 func main() {
 	flag.Parse()
 	if h {
@@ -117,12 +112,36 @@ func main() {
 					break // 有開村就跳出去
 				}
 			}
+			// 刪除所有噗
+			for d {
+				opt = map[string]string{}
+				opt["offset"] = time.Now().Format("2006-1-2T15:04:05")
+				opt["limit"] = "50"
+				opt["minimal_user"] = "true"
+				opt["minimal_data"] = "true"
+				ans, _ = callAPI(tok, "/APP/Timeline/getPlurks", opt)
+				plurks := plurksObj{}
+				json.Unmarshal(ans, &plurks)
+				if len(plurks.Plurks) > 0 {
+					for _, plurk := range plurks.Plurks {
+						fmt.Printf("刪除 [%d]\n", plurk.PlurkID)
+						opt = map[string]string{}
+						opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
+						callAPI(tok, "/APP/Timeline/plurkDelete", opt)
+					}
+				} else {
+					break
+				}
+			}
+			if d {
+				d = false
+			}
 			if !isOpen || isOpen && isDone {
 				doOpen = true
 			}
 			if doOpen {
 				// 開村然後開始
-				fmt.Println("開村！")
+				fmt.Println("開村...")
 				opt = map[string]string{}
 				opt["qualifier"] = ":"
 				opt["lang"] = "ja"
@@ -159,7 +178,7 @@ func main() {
 					opt["qualifier"] = ":"
 					opt["content"] = "開始"
 					ans, e := callAPI(tok, "/APP/Responses/responseAdd", opt)
-					fmt.Println("開始～")
+					fmt.Println("開始...")
 					if e != nil {
 						fmt.Printf("%+v\n", e)
 					} else {
