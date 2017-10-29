@@ -17,6 +17,7 @@ type plurkObj struct {
 	PlurkID    int    `json:"plurk_id"`
 	IsUnread   int    `json:"is_unread"`
 	Responded  int    `json:"responded"`
+	NoComments int    `json:"no_comments"`
 	UserID     int    `json:"user_id"`
 	OwnerID    int    `json:"owner_id"`
 	Posted     string `json:"posted"`

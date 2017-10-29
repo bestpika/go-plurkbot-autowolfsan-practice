@@ -22,14 +22,16 @@ var (
 	c    string
 	d    bool
 	h    bool
+	l    int
 	opt  map[string]string
 	errc int
 )
 
 func init() {
-	flag.BoolVar(&h, "h", false, "說明")
-	flag.BoolVar(&d, "d", false, "刪除所有噗")
 	flag.StringVar(&c, "c", "config.json", "載入設定檔")
+	flag.BoolVar(&d, "d", false, "刪除所有噗")
+	flag.BoolVar(&h, "h", false, "說明")
+	flag.IntVar(&l, "l", -1, "紀錄")
 	flag.Usage = usage
 }
 
@@ -94,7 +96,20 @@ func main() {
 						if i >= responses.ResponsesSeen {
 							fmt.Printf("%s, { %s }\n", t.Format("2006-01-02 15:04:05 -0700"), s)
 						}
-						if isDone {
+						if isDone && plurk.NoComments == 0 {
+							fmt.Println("結束...")
+							// 記錄開始結束時間
+							if l > -1 {
+								dtResp, _ := time.Parse(time.RFC1123, response.Posted)
+								opt = map[string]string{}
+								opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
+								opt["qualifier"] = ":"
+								opt["content"] = fmt.Sprintf("%d, %s, %s",
+									plurk.PlurkID,
+									dtOpen.Format("2006-01-02 15:04:05 -0700"),
+									dtResp.Format("2006-01-02 15:04:05 -0700"))
+								callAPI(tok, "/APP/Responses/responseAdd", opt)
+							}
 							// 關閉回應
 							opt = map[string]string{}
 							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
@@ -132,12 +147,20 @@ func main() {
 				ans, _ = callAPI(tok, "/APP/Timeline/getPlurks", opt)
 				plurks := plurksObj{}
 				json.Unmarshal(ans, &plurks)
-				if len(plurks.Plurks) > 0 {
+				// 只剩下記錄噗
+				if len(plurks.Plurks) == 1 && plurks.Plurks[0].PlurkID == l {
+					break
+				} else if len(plurks.Plurks) > 0 {
 					for _, plurk := range plurks.Plurks {
-						fmt.Printf("刪除 [%d]\n", plurk.PlurkID)
-						opt = map[string]string{}
-						opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
-						callAPI(tok, "/APP/Timeline/plurkDelete", opt)
+						// 不刪除記錄噗
+						if len(plurks.Plurks) == 1 && plurk.PlurkID == l {
+							break
+						} else if plurk.PlurkID != l {
+							fmt.Printf("刪除 [%d]\n", plurk.PlurkID)
+							opt = map[string]string{}
+							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
+							callAPI(tok, "/APP/Timeline/plurkDelete", opt)
+						}
 					}
 				} else {
 					break
@@ -176,16 +199,16 @@ func main() {
 						}
 						// 隨機秒數召喚
 						tMin := 2000
-						tMax := 5000
+						tMax := 4000
 						t := time.Duration(rand.Intn(tMax-tMin) + tMin)
 						fmt.Printf("[%d] %d\n", i+1, t)
 						time.Sleep(t * time.Millisecond)
 					}
 					// 開始
+					fmt.Println("開始...")
 					opt["qualifier"] = ":"
 					opt["content"] = "開始"
 					ans, e := callAPI(tok, "/APP/Responses/responseAdd", opt)
-					fmt.Println("開始...")
 					if e != nil {
 						fmt.Printf("%+v\n", e)
 					} else {
