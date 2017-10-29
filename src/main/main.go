@@ -102,7 +102,7 @@ func main() {
 							if l > -1 {
 								dtResp, _ := time.Parse(time.RFC1123, response.Posted)
 								opt = map[string]string{}
-								opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
+								opt["plurk_id"] = strconv.Itoa(l)
 								opt["qualifier"] = ":"
 								opt["content"] = fmt.Sprintf("%d, %s, %s",
 									plurk.PlurkID,
