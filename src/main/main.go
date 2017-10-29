@@ -94,6 +94,13 @@ func main() {
 						if i >= responses.ResponsesSeen {
 							fmt.Printf("%s, { %s }\n", t.Format("2006-01-02 15:04:05 -0700"), s)
 						}
+						if isDone {
+							// 關閉回應
+							opt = map[string]string{}
+							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
+							opt["no_comments"] = "1"
+							callAPI(tok, "/APP/Timeline/toggleComments", opt)
+						}
 					}
 					if !isDone && dfOpen >= 3600000000000 {
 						isOpen = false
