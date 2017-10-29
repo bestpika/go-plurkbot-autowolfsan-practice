@@ -112,8 +112,11 @@ func main() {
 					break // 有開村就跳出去
 				}
 			}
+			if !isOpen || isOpen && isDone {
+				doOpen = true
+			}
 			// 刪除所有噗
-			for d {
+			for doOpen && d {
 				opt = map[string]string{}
 				opt["offset"] = time.Now().Format("2006-1-2T15:04:05")
 				opt["limit"] = "50"
@@ -133,11 +136,8 @@ func main() {
 					break
 				}
 			}
-			if d {
+			if doOpen && d {
 				d = false
-			}
-			if !isOpen || isOpen && isDone {
-				doOpen = true
 			}
 			if doOpen {
 				// 開村然後開始
