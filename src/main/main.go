@@ -27,6 +27,8 @@ var (
 	errc int
 )
 
+const gameID = 14290126 // 人狼
+
 func init() {
 	flag.StringVar(&c, "c", "config.json", "載入設定檔")
 	flag.BoolVar(&d, "d", false, "刪除所有噗")
@@ -173,6 +175,7 @@ func main() {
 				// 開村然後開始
 				fmt.Println("開村...")
 				opt = map[string]string{}
+				opt["limited_to"] = fmt.Sprintf("[%d]", gameID)
 				opt["qualifier"] = ":"
 				opt["lang"] = "ja"
 				opt["content"] = fmt.Sprintf("%s\n開村", time.Now().Format("2006-01-02 15:04:05.000"))
