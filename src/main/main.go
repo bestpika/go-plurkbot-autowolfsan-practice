@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -142,6 +143,7 @@ func main() {
 				doOpen = true
 			}
 			// 刪除所有噗
+			wg := &sync.WaitGroup{}
 			for doOpen && d {
 				opt = map[string]string{}
 				opt["offset"] = time.Now().Format("2006-1-2T15:04:05")
@@ -161,12 +163,17 @@ func main() {
 							fmt.Printf("刪除: %d\n", plurk.PlurkID)
 							opt = map[string]string{}
 							opt["plurk_id"] = strconv.Itoa(plurk.PlurkID)
-							callAPI(tok, "/APP/Timeline/plurkDelete", opt)
+							wg.Add(1)
+							go func() {
+								defer wg.Done()
+								callAPI(tok, "/APP/Timeline/plurkDelete", opt)
+							}()
 						}
 					}
 				} else {
 					break
 				}
+				wg.Wait()
 			}
 			if doOpen && d {
 				d = false
